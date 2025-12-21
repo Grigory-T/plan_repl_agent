@@ -13,7 +13,7 @@ services:
       - .env
     environment:
       # Timezone (cross-platform: works on Linux, Windows, macOS)
-      - TZ=${TZ:-UTC}
+      - TZ=Europe/Moscow
       # Agent can pip install to writable location in lib/
       - PIP_TARGET=/app/lib/.pydeps
       - PYTHONPATH=/app/lib/.pydeps

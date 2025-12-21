@@ -49,3 +49,7 @@ correct .sh file line endings:
 ```bash
 (Get-Content docker-entrypoint.sh -Raw) -replace "`r`n","`n" | Set-Content docker-entrypoint.sh -NoNewline
 ```
+
+# log time zone
+hard coded to TZ=Europe/Moscow  
+see file: docker-compose.yml  
