@@ -9,11 +9,11 @@ services:
       - ./work:/app/work  # Work dir for agent files (clean user space)
       - ./lib:/app/lib  # Technical infrastructure (.pydeps, .matplotlib, etc.)
       - ./logs:/app/logs  # Logs visible on host
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     env_file:
       - .env
     environment:
+      # Timezone (cross-platform: works on Linux, Windows, macOS)
+      - TZ=${TZ:-UTC}
       # Agent can pip install to writable location in lib/
       - PIP_TARGET=/app/lib/.pydeps
       - PYTHONPATH=/app/lib/.pydeps

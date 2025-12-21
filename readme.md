@@ -5,7 +5,8 @@
 ```bash
 git clone https://github.com/Grigory-T/plan_repl_agent
 cd plan_repl_agent
-docker compose build && docker compose up -d
+docker compose build
+docker compose up -d
 ```
 
 then create .env file with OPENROUTER_API_KEY
@@ -34,10 +35,17 @@ python3 runner.py  # or python runner.py
 
 
 # important notes
-- preferably use linux to run agent (i used ubuntu 24)
 - agent runs in docker, non-root user
 - agent can execute any python and bash commands (**take into account security issues**)
 - agent can pip install ...
 - agent cannot apt-get ...
 
+# windows
+preferably run linux to run agent (i used ubuntu 24)   
+if run on windows:  
+need to install docker desktop for windows
 
+correct .sh file line endings:  
+```bash
+(Get-Content docker-entrypoint.sh -Raw) -replace "`r`n","`n" | Set-Content docker-entrypoint.sh -NoNewline
+```
