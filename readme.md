@@ -1,4 +1,4 @@
-# planning agent with repl
+**planning agent with repl**  
 
 # how to run:
 
@@ -13,8 +13,16 @@ then create .env file with OPENROUTER_API_KEY
 ```bash
 # write some task in runner.py
 # use e.g. task_sample variable
-python3 runner.py
+python3 runner.py  # or python runner.py
 ```
+
+# to see how agent works:
+[youtube](https://www.youtube.com/watch?v=6erdpQyXLaI)  
+[vkvideo](https://vkvideo.ru/video-228427241_456239018)  
+
+
+# more detailed habr article
+[habr](https://habr.com/ru/articles/977062/)  
 
 
 # files and folders overivew
@@ -25,10 +33,11 @@ python3 runner.py
 /runner.py - use to start agent
 
 
-# important notes:
-- agent runs in docker
-- agent can execute python and bash commands (take into account security issues)
-- agent can pip install
-- agent cannot apt-get
+# important notes
+- preferably use linux to run agent (i used ubuntu 24)
+- agent runs in docker, non-root user
+- agent can execute any python and bash commands (**take into account security issues**)
+- agent can pip install ...
+- agent cannot apt-get ...
 
 
