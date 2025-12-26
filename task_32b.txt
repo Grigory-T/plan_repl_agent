@@ -1,0 +1,3 @@
+create hometask.py
+write some clojure code init
+save file to CWD

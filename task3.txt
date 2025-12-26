@@ -1,0 +1,9 @@
+We have file: `employee_skills.md` (see CWD, ./employee/employee_skills.md)
+We need to segment all employees into three groups:
+- technical specialists
+- managers and project leads
+- executives and board members
+If direct information is not available, try to infer this from the context or from indirect logic.
+Use some heuristics to segment employees.
+
+You should work only in ./employee folder.

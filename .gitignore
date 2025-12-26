@@ -2,6 +2,10 @@
 /_logs_article/
 /.env
 
+# Results of agent execution
+/logs/
+/work/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -131,6 +135,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*.bat
 
 # Spyder project settings
 .spyderproject

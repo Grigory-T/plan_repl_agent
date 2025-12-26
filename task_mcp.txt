@@ -1,0 +1,7 @@
+MCP server/client approach is an AI-friendly integration method for AI agents and data infrastructure.
+But it does not always work for large Enterprises such as Banks.
+
+Your goal is to conduct a research to find out advantages and downsides, look for better alternatives, and make a report containing pros and cons for all popular approaches.
+
+You can use CWD folder to store files and data, if needed.
+Save result in .md file named after the task.

@@ -1,0 +1,6 @@
+we have python l:list[str]
+len(l) == 1000
+len(set(l)) == 1000
+we have function f(s1, s2) -> float: from 0 to 1, similarity score of two strings.
+we need to delete minimal number of strings from l, so that no two strings in l have similarity score > 0.5
+propose algorithm to solve this problem.
