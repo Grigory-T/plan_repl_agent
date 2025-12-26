@@ -31,7 +31,7 @@ def reset() -> dict:
 
 def load_task_from_file(filepath: str) -> str:
     """Load task text from file."""
-    path = Path(filepath)
+    path = Path(__file__).parent / "tasks" / filepath
     if not path.exists():
         print(f"Error: Task file '{filepath}' not found.")
         sys.exit(1)
@@ -39,18 +39,7 @@ def load_task_from_file(filepath: str) -> str:
 
 
 # Default task for backward compatibility
-test = """you task is to try out tool FTA (Flat Table Analysis) and state you opinion about it (in report.md file, CWD)
-download any table to test, any table with interesting relations between columns
-
-# FTA code example:
-!pip install flattableanalysis
-from flattableanalysis.flat_table_analysis import FlatTableAnalysis
-df = pd.DataFrame(YOUR_DATA)
-fta = FlatTableAnalysis(df)  # create analysis object
-fta.get_candidate_keys(2)  # check 2-cols candidates
-fta.show_fd_graph()[0]  # see graph of functional dependencies (all pairs of columns)
-
-you can use CWD folder to store files and data, if needed."""
+test = """create doc.txt in CWD"""
 
 
 if __name__ == "__main__":
