@@ -38,6 +38,6 @@ tabulate
 scikit-learn
 
 # Other
-erc3>=1.2.0
+#erc3>=1.2.0
 tavily-python
 pytesseract

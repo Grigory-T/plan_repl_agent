@@ -1,90 +1,57 @@
-# LLM Agent Competition Analysis: Ultimate Leaderboard Insights
+# Applying First Principles Framework with Small-Context LLMs
 
 ## Executive Summary
+This report provides practical, actionable suggestions for implementing the First Principles Framework (FPF) using Large Language Models (LLMs) with constrained context windows (40-80K tokens). The recommendations combine FPF's rigorous analytical approach with optimized context management strategies.
 
-This report analyzes the top 10 performing agents from the ERC (Enterprise Reasoning Challenge) leaderboard to identify common architectural patterns, unique innovations, and noteworthy observations about the competitive landscape. The analysis is based on data extracted from the official competition website.
+## Generated Suggestions
 
----
+1. Implement FPF as a modular pipeline: Break the First Principles Framework into discrete modules (problem analysis, principle extraction, solution synthesis) that can operate within separate context windows. Use summary tokens to pass essential context between modules, maintaining the framework's integrity while respecting token limits.
 
-## 1. Common Architectural Choices Among Top Agents
+2. Develop FPF-specific context allocation: Allocate context window segments proportionally to FPF phases based on their complexity. For example, dedicate 40% to problem definition and principle identification, 40% to solution synthesis, and 20% to validation and refinement.
 
-Common architectural patterns among top 10 ERC3 agents:
+3. Create compressed FPF principle representations: Use symbolic notation (P1, P2, etc.) for frequently referenced principles with a lookup table outside the main context. Include only active principles in the context window, retrieving others as needed from external memory.
 
-1. TOOL-CENTRIC DESIGN: All top agents heavily rely on function/tool calling with structured outputs (9/10). Tools are typically mapped 1:1 to API endpoints, with careful schema design for reliability and dynamic HTTP request construction.
+4. Implement hierarchical FPF execution: Start with high-level principle application in the main context window, then spawn focused sub-analyses for complex principles in separate context windows. Aggregate results through structured summarization.
 
-2. MODEL SELECTION: Strong preference for high-capability models - Claude Opus 4.5, GPT-5.1, GPT-4.1, and specialized reasoning models (deepseek-reasoner). Many use multiple models in ensemble approaches or specialized roles (reasoning vs. safety).
+5. Establish FPF workflow checkpoints: Design the FPF implementation to create compressed snapshots at key workflow points. These checkpoints serve as restart points if context limits are reached, preventing loss of analysis progress.
 
-3. REASONING FRAMEWORKS: ReAct (Reasoning + Acting) patterns are prevalent (3/10), often enhanced with dedicated "think" tools, structured reasoning steps, or chain/tree of thought approaches. SGR (Structured Generation and Reasoning) appears in 5/10 top agents.
+6. Implement dynamic context reallocation for FPF: Monitor token usage during FPF execution and dynamically adjust what's kept in context. Prioritize active principles and recent analysis steps while archiving completed phases to external memory.
 
-4. VALIDATION LAYERS: Multiple validation stages are common - pre-execution security checks (3/10), step validation during execution, post-execution result verification, and dedicated critic agents (2/10) for controlled reasoning.
+7. Create optimized FPF prompt templates: Develop minimal yet complete templates for each FPF component that include placeholders rather than full explanations. Use these templates to maintain framework structure while minimizing token consumption.
 
-5. CONTEXT MANAGEMENT: Sophisticated context handling including compression of previous turns, selective retention of only relevant history, and efficient prompt design to minimize token usage. Some agents use complete wiki injection with caching.
+8. Build external FPF knowledge base: Maintain a vector database of FPF principles, examples, and applications. During analysis, retrieve only the 3-5 most relevant items for the current context window instead of including the entire framework documentation.
 
-6. MULTI-AGENT ORCHESTRATION: Several top agents use multi-agent pipelines (analyzer/versioner agents, security gate agents, specialized validators) rather than single monolithic agents. The top agent features a 3-agent self-evolution pipeline.
+9. Implement progressive FPF disclosure: Begin with first-order principles in the initial context window, then progressively introduce second and third-order principles as needed in subsequent windows. This matches FPF's natural depth progression with context constraints.
 
-7. FRAMEWORK USAGE: Mix of custom implementations and frameworks - LangChain/LangGraph for orchestration (2/10), Anthropic/OpenAI SDKs for tool calling, and specialized libraries for structured outputs (instructor, Pydantic).
+10. Use streaming FPF analysis: Process complex problems through FPF in a streaming fashion, where each context window handles a specific aspect or sub-problem. Maintain a running summary that connects all windows, preserving the holistic FPF approach.
 
-8. PERFORMANCE OPTIMIZATION: Attention to speed (Cerebras provider for ~3k tokens/sec throughput) and cost-efficiency through prompt distillation, caching strategies, and minimal context retention.
+11. Develop context-aware FPF adaptation: Create a meta-layer that adjusts FPF application based on available context. For simple problems, use a condensed FPF version; for complex ones, employ the full framework across multiple context windows with careful handoffs.
 
-9. SELF-IMPROVEMENT MECHANISMS: Some agents incorporate automated prompt evolution, feedback loops, and iterative improvement based on failure analysis (rank 1 agent evolved through 80+ generations).
+12. Design FPF-specific memory architecture: Implement a memory system that understands FPF structure, storing principles, intermediate conclusions, and validation criteria separately. Retrieve items based on FPF workflow position rather than simple recency.
 
-10. PROMPT ENGINEERING: System prompts distill complex wiki rules into compact decision algorithms rather than verbatim rule inclusion. Many agents use distilled knowledge bases rather than full context injection.
+13. Track principle application efficiently: Instead of keeping full application details in context, maintain a lightweight tracking system that records which principles have been applied and their outcomes. Expand details only when needed for validation or refinement.
 
-## 2. Unique Features and Innovations
+14. Optimize FPF validation for small contexts: Implement validation as a separate phase with its own context allocation. Use checklist-style validation against principles rather than full re-analysis, focusing on critical validation points.
 
-TRULY UNIQUE FEATURES (Found in only one agent):
-  • MMzXeM (Rank 4): Implements rag
-  • f1Uixf (Rank 5): Uses langchain framework
-  • f1Uixf (Rank 5): Implements safety
-  • xoDvsa (Rank 7): Uses langgraph framework
-  • Lcnxuy (Rank 8): Implements rag
+15. Ensure cross-window FPF consistency: Develop mechanisms to maintain consistency when FPF analysis spans multiple context windows. Use consistent naming, reference previous conclusions with unique identifiers, and implement validation checks at window boundaries.
 
-SEMI-UNIQUE FEATURES (Found in only two agents):
-  • MMzXeM (Rank 4): Implements rag
-  • Lcnxuy (Rank 8): Implements rag
 
-NOTABLE INSIGHTS FROM AGENT DESCRIPTIONS:
-  • VZS9FL (Rank 1): Emphasizes scalable, distributed, parallel, concurrent, async, batch, real-time deployment
-  • NLN7Dw (Rank 2): Describes approach as custom
-  • NLN7Dw (Rank 2): Emphasizes scalable, distributed, parallel, concurrent, async, batch, real-time deployment
-  • MMzXeM (Rank 4): Describes approach as custom
-  • f1Uixf (Rank 5): Describes approach as custom
-  • Lcnxuy (Rank 8): Describes approach as custom
+## Implementation Considerations
 
-UNUSUAL MODEL COMBINATIONS:
-  • f1Uixf: Uses 2 different model families (openai, open_source)
-  • Lcnxuy: Uses 2 different model families (openai, anthropic)
+### Context Window Allocation
+- **Problem Definition Phase**: 30-40% of context window
+- **Principle Extraction & Application**: 40-50% of context window  
+- **Solution Synthesis & Validation**: 20-30% of context window
 
-## 3. Other Interesting Leaderboard Observations
+### Memory Architecture Requirements
+1. **Short-term Memory**: Active FPF principles and current analysis
+2. **Medium-term Memory**: Recent conclusions and validation results
+3. **Long-term Memory**: FPF framework knowledge base and historical analyses
 
-Beyond architectural patterns, several notable trends emerge from analyzing the leaderboard data:
+### Performance Optimization
+- Implement caching for frequently used FPF components
+- Use compression for intermediate analysis results
+- Establish clear context window boundaries between FPF phases
 
-### Observation 1: Significant lead
-Top agent (score: 0.718) leads by 0.097 points, 15.6% ahead of second place.
-
-### Observation 2: Huge efficiency disparity
-NLN7Dw (1.1 pts/$) is 52.8x more cost-effective than VZS9FL (0.0 pts/$).
-
-### Observation 3: Strong positive correlation (r=0.55) between cost and score
-spending more tends to yield higher scores.
-
-### Observation 4: All top 10 agents submitted on 2025-12-09, indicating intense final-day optimization before deadline.
-All top 10 agents submitted on 2025-12-09, indicating intense final-day optimization before deadline.
-
-### Observation 5: All top 10 teams use coded 6-character identifiers (like 'VZS9FL', 'NLN7Dw'), suggesting anonymized or systematic team naming in the competition.
-All top 10 teams use coded 6-character identifiers (like 'VZS9FL', 'NLN7Dw'), suggesting anonymized or systematic team naming in the competition.
-
-## Methodology
-
-This analysis was conducted by:
-1. Extracting HTML data from the official ERC competition leaderboard
-2. Parsing and structuring data for the top 10 agents by score
-3. Analyzing architectural descriptions, model usage, and performance metrics
-4. Identifying patterns through comparative analysis
-
-Data Source: https://erc.timetoact-group.at/assets/erc3.html
-Analysis Date: December 21, 2025
-
----
-
-*Note: This analysis is based on publicly available competition data. Team strategies may evolve, and proprietary implementation details may not be fully disclosed in public descriptions.*
+## Conclusion
+By implementing these suggestions, organizations can leverage the rigorous analytical power of the First Principles Framework even when working with LLMs that have limited context windows. The key is to respect both the integrity of the FPF methodology and the practical constraints of current LLM technology.
