@@ -22,9 +22,5 @@ ENV PYTHONUNBUFFERED=1 \
 
 EXPOSE 8000
 
-# Copy and setup entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
 # Note: docker-compose.yml sets user: "${UID:-1000}:${GID:-1000}"
 CMD ["uvicorn", "agent.server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
