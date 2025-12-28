@@ -41,7 +41,8 @@ grep "rabbit" wiki.md
 - debian bash shell (direct shell bash execution)
 - bash can be multiline commands (any number of lines of bash commands)
 - you are in docker container as user 1000
-- Python package installation: Use bash to run `python -m pip install package_name`
+- you should use venv for python packages installation (venv is created, PATH is already set correctly)
+- Python package installation: Use bash to run `python -m pip install package_name` (it uses venv automatically)
   Example:
   ```bash
   python -m pip install colorama

@@ -19,6 +19,8 @@ git clone https://github.com/Grigory-T/plan_repl_agent
 cd plan_repl_agent
 docker compose build
 docker compose up -d
+
+chown -R 1000:1000 ./
 ```
 
 ## Step 2: Run a Task
