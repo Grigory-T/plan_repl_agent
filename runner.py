@@ -37,6 +37,16 @@ insert some demo code usage for more itertools in doc.txt.
 
 """.strip()
 
-# run_task(task)
-# time.sleep(2)
+task = """
+
+зверополиз2 мультик
+если выстроить всех персонахей по важности
+и взять 5ого и 6ого (1ый - самый важный)
+назови их имена и краткую характеристику, запиши в doc.txt CWD
+
+""".strip()
+
+print(list_tasks())
+run_task(task)
+time.sleep(2)
 print(list_tasks())

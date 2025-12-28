@@ -3,39 +3,37 @@ import datetime
 PLAN_PROMPT = f"""
 current date: {datetime.datetime.now().strftime("%Y-%m-%d")}
 
-Create an plan to achieve the following task.
+Create plan to achieve the following task:
 
 ## Task
 {{task}}
 
-## Planning instructions
+# Planning instructions
 - Break down the task into clear, actionable steps (1-10 steps approximately)
-- for simple tasks you can shedule 1-2 step. for complex difficult tasks you can shedule more steps, up to 10.
-- Each step should contain description and step_variables
-- step_variables - exptected result of the step (after step code execution)
-- variables names and dtypes should strictly follow python syntax and types.
-- do not use `any` type in step_variables.
-- variables names should not conflict with python built-in variables and keywords.
-- variable_description should follow the variable_data_type in terms of data type.
-- use explisit full data types. if needed use nested types (list[tuple[int, str]]).
-- first step could not have input_variables (no previous steps to set variables)
-- all other steps may have input_variables, check that input_variables are set in previous steps
-- always provide the full explicit information in each step description. Technical details, links, paths, etc.
-- all output variables should should be used in the next steps. Do not created unused variables.
+- for simple tasks you can shedule 1-2 step. for complex difficult tasks you can shedule more steps, up to 10
 
-## Data types
-- you should use explicit full data types.
+# Input and Output variables
+- Each step should contain description and step variables: input_variables and output_variables
+- always provide the full explicit information in each step description. Technical details, links, paths, etc.
+- input_variables - variables that are used in the step, must me ready before the step execution
+- output_variables - variables that are created in the step, must be used in the next steps
+- variables names and data types should strictly follow python syntax and types
+- do not use `any` type in step_variables
+- variables names should not conflict with python built-in variables and keywords
+- variable_description should follow the variable_data_type in terms of data type
+- use explisit full data types. if needed use nested types (list[tuple[int, str]]).
 - e.g. pandas.DataFrame, numpy.ndarray, list[tuple[int, str]], dict[str, list[int]], etc.
 - data types should be literal python types in string format.
-- 
+- first step could not have input_variables (no previous steps to set variables)
+- last step could not have output_variables (no next steps to use variables)
+- all output variables should be used in the next steps. Do not create unused variables
 
-Steps could use the following tools:
+# Steps could use the following tools:
 - python code execution
 - bash shell execution
 - pip install package_name
-- internet
-- files system, files read/write, folders
-- hardware: 64Gb RAM, Nvidia 3060 12Gb, 8 cpus.
+- internet (curl, requests etc)
+- files system, files read/write, CWD
 
 """.strip()
 
