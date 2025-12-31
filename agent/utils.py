@@ -8,17 +8,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def _env_str(name: str, default: str) -> str:
-    """Return env var value if set and non-empty, otherwise a default."""
-    val = os.getenv(name)
-    return val if val else default
+LLM_MODEL_PLAN = "openai/gpt-4.1"
+LLM_MODEL_DECISION = "openai/gpt-4.1"
+LLM_MODEL_REPLAN = "openai/gpt-4.1"
 
+LLM_MODEL_AGENT = "openai/gpt-oss-120b"
 
-LLM_MODEL_PLAN = _env_str("LLM_MODEL_PLAN", "openai/gpt-4.1")
-LLM_MODEL_DECISION = _env_str("LLM_MODEL_DECISION", "openai/gpt-4.1")
-LLM_MODEL_REPLAN = _env_str("LLM_MODEL_REPLAN", "openai/gpt-4.1")
+# "openai/gpt-4.1"
+# "moonshotai/kimi-k2-thinking"
+# z-ai/glm-4.6
+# "deepseek/deepseek-v3.2"
+# deepseek/deepseek-v3.2-speciale
+# "qwen/qwen3-32b"
+# "google/gemini-3-flash-preview"
 
-LLM_MODEL_AGENT = _env_str("LLM_MODEL_AGENT", "deepseek/deepseek-v3.2")
 
 def llm_structured(prompt: str, response_model: type[BaseModel], model: str | None = None) -> BaseModel:
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENROUTER_API_KEY"))
@@ -55,7 +58,11 @@ def llm(messages: list, model: str | None = None) -> tuple[str, str]:
         # stop=['```\n'],
         extra_body={
             "reasoning": {
-                "effort": "minimal"  #  "minimal", "low", "medium", "high", "xhigh"
+                "effort": "xhigh",  #  "minimal", "low", "medium", "high", "xhigh"
+                "provider": {
+                    "ignore": ["Parasail"],
+                    "sort": "throughput",  # latency
+                },
             }
         }
     )
@@ -162,5 +169,3 @@ def format_step_variables(variables: List) -> str:
         lines.append(f"  - {var.variable_name} ({var.variable_data_type}): {var.variable_description}")
     
     return "\n" + "\n".join(lines)
-
-
