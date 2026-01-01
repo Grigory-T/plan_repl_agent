@@ -9,6 +9,7 @@ Create plan to achieve the following task:
 {{task}}
 
 # Planning instructions
+- Execution uses tagged blocks: <python>...</python>, <bash>...</bash>, and a final <final_answer>...</final_answer> with exactly two assignments (step_status, final_answer).
 - Break down the task into clear, actionable steps (1-10 steps approximately)
 - for simple tasks you can shedule 1-2 step. for complex difficult tasks you can shedule more steps, up to 10
 
@@ -35,6 +36,18 @@ Create plan to achieve the following task:
 - internet (curl, requests etc)
 - files system, files read/write, CWD
 - you are in docker container as user 1000
+
+# Функции поиска в продуктовом каталоге (уже доступны как глобальные переменные):
+- `search_products(query, page=1, sort="popularity")` — поиск товаров
+- `get_product_details(product_id)` — детали товара (КБЖУ, состав)
+- `create_cart_link(products)` — создание ссылки на корзину
+- `close_connection()` — закрытие (опционально)
+Примеры использования:
+<python>
+result = search_products("молоко")
+details = get_product_details(36296)
+cart = create_cart_link([{{{{"xml_id": 36296, "q": 2}}}}])
+</python>
 
 """.strip()
 

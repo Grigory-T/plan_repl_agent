@@ -5,6 +5,7 @@ import gc
 import sys
 import threading
 import subprocess
+import asyncio
 from pathlib import Path
 from collections import deque
 from fastapi import FastAPI
@@ -244,7 +245,9 @@ async def run_task(request: TaskRequest):
     with tasks_lock:
         tasks_store[task_id] = {
             "status": "pending",
-            "task": request.task,
+            "task": request.task + (
+                "\n\nВАЖНОрезультаты запиши в result.md (CWD)."
+                "Даже если результатов нет или задачу невозможно выполнить, запиши в result.md (CWD)"),
             "result": None,
             "error": None,
         }
@@ -254,10 +257,21 @@ async def run_task(request: TaskRequest):
         pending_queue.append(task_id)
     print(f"✓ Task {task_id[:8]} queued")
     
+    # Wait for result.md file in work/{task_id}/ directory
+    work_dir = Path("/app/work") / task_id
+    result_file = work_dir / "result.md"
+    
+    # Poll every 1 second until result.md appears
+    while not result_file.exists():
+        await asyncio.sleep(1)
+    
+    # Read result and return
+    result_text = result_file.read_text()
+    
     return TaskResponse(
         task_id=task_id,
-        status="pending",
-        message="Task submitted"
+        status="completed",
+        message=result_text
     )
 
 

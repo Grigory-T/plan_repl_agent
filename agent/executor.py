@@ -5,8 +5,13 @@ from contextlib import redirect_stdout, redirect_stderr
 from pydantic import BaseModel
 import subprocess
 
+from .vkusvill_mcp import search_products, get_product_details, create_cart_link
+
 PERSISTENT_GLOBALS = {
     "__builtins__": __builtins__,
+    "search_products": search_products,
+    "get_product_details": get_product_details,
+    "create_cart_link": create_cart_link,
 }
 
 class CodeResponse(BaseModel):

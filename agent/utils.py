@@ -79,53 +79,67 @@ def llm(messages: list, model: str | None = None) -> tuple[str, str]:
 
     class ResponseBlock(BaseModel):
         block_id: int
-        block_type: Literal["python", "bash", "text"]
+        block_type: Literal["python", "bash", "final_answer", "text"]
         block_text: str
 
     blocks: list[ResponseBlock] = []
 
-    # Parse content into ordered blocks, removing ``` fences but preserving sequence.
-    # We do NOT modify inner text/code; only strip the fence markers.
+    # Parse content that follows the pattern:
+    #   optional text
+    #   <python>...</python>
+    #   optional text
+    #   <bash>...</bash>
+    #   optional text
+    #   <final_answer>...</final_answer>
+    #
+    # Blocks are flat (no nesting) and tags always have closing pairs.
+    allowed_tags = ("python", "bash", "final_answer")
     idx = 0
     block_idx = 0
-    while True:
-        start = content.find("```", idx)
-        if start == -1:
-            # Remaining text
+
+    while idx < len(content):
+        # Find the earliest next opening tag among the allowed set.
+        next_tag = None
+        next_pos = len(content)
+        for tag in allowed_tags:
+            pos = content.find(f"<{tag}>", idx)
+            if pos != -1 and pos < next_pos:
+                next_tag = tag
+                next_pos = pos
+
+        # No more tags; remaining text (if any) is a final text block.
+        if next_tag is None:
             tail = content[idx:]
             if tail:
                 blocks.append(ResponseBlock(block_id=block_idx, block_type="text", block_text=tail))
                 block_idx += 1
             break
 
-        # Text before fence
-        if start > idx:
-            text_part = content[idx:start]
-            blocks.append(ResponseBlock(block_id=block_idx, block_type="text", block_text=text_part))
-            block_idx += 1
+        # Text before the next tag.
+        if next_pos > idx:
+            text_part = content[idx:next_pos]
+            if text_part:
+                blocks.append(ResponseBlock(block_id=block_idx, block_type="text", block_text=text_part))
+                block_idx += 1
 
-        # Determine block type from fence
-        lang_end = content.find("\n", start + 3)
-        if lang_end == -1:
-            lang_end = start + 3
-        lang = content[start + 3:lang_end].strip()
-        block_type = "text"
-        if lang == "python":
-            block_type = "python"
-        elif lang == "bash":
-            block_type = "bash"
+        # Extract the tagged block.
+        start_token = f"<{next_tag}>"
+        end_token = f"</{next_tag}>"
+        start_idx = next_pos + len(start_token)
+        end_idx = content.find(end_token, start_idx)
 
-        # Find closing fence
-        close = content.find("```", lang_end)
-        if close == -1:
-            code_part = content[lang_end:]
-            idx = len(content)
-        else:
-            code_part = content[lang_end:close]
-            idx = close + 3
+        # If no closing tag is found, treat the rest as text to avoid losing information.
+        if end_idx == -1:
+            remainder = content[next_pos:]
+            if remainder:
+                blocks.append(ResponseBlock(block_id=block_idx, block_type="text", block_text=remainder))
+                block_idx += 1
+            break
 
-        blocks.append(ResponseBlock(block_id=block_idx, block_type=block_type, block_text=code_part))
+        block_text = content[start_idx:end_idx]
+        blocks.append(ResponseBlock(block_id=block_idx, block_type=next_tag, block_text=block_text))
         block_idx += 1
+        idx = end_idx + len(end_token)
 
     reasoning = ''
     reasoning_details = getattr(message, 'reasoning_details', None)

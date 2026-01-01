@@ -36,106 +36,142 @@ def run_step(task, current_step, completed_steps, log_dir=None, step_index=0) ->
         
         _append_reasoning(reasoning_log, reasoning)
 
-        if all(block.block_type == "text" for block in llm_response_blocks):
-            messages.append({"role": "assistant", "content": llm_response})
-            _append_step_log(messages_log, "assistant", llm_response)
-            user_msg = ("No valid code to execute. Use \n```python\n...\n```\nor \n```bash\n...\n```\nblocks to write code.\n"
-                        "If step is completed you should set python variables `step_status: str` - 'completed' or 'failed' and `final_answer: str` - description of results.\n"
-                        )
+        has_code_blocks = any(block.block_type in ("python", "bash") for block in llm_response_blocks)
+        has_final_blocks = any(block.block_type == "final_answer" for block in llm_response_blocks)
+        only_text_blocks = all(block.block_type == "text" for block in llm_response_blocks)
+
+        # Case 1: only text - ask LLM to produce runnable code.
+        if only_text_blocks:
+            if llm_response and llm_response.strip():
+                messages.append({"role": "assistant", "content": llm_response})
+                _append_step_log(messages_log, "assistant", llm_response)
+            user_msg = (
+                "No valid code to execute. Respond with <python>...</python> or <bash>...</bash> blocks to run code.\n"
+                "When the step is finished, you must return a <final_answer>...</final_answer> block that sets exactly two variables:\n"
+                "step_status = 'completed' or 'failed'\n"
+                "final_answer = 'short description of the result'"
+            )
             messages.append({"role": "user", "content": user_msg})
             _append_step_log(messages_log, "user", user_msg)
             continue
 
-        pending_text = []
-        python_blocks = []
-        pair_idx = 0  # numbering for code/result pairs in logs
+        # Case 2: python/bash present (ignore any final_answer blocks while running code).
+        if has_code_blocks:
+            if has_final_blocks:
+                llm_response_blocks = [b for b in llm_response_blocks if b.block_type != "final_answer"]
 
-        for block in llm_response_blocks:
-            if block.block_type == "text":
-                pending_text.append(block.block_text)
-                continue
-
-            if block.block_type not in ("python", "bash"):
-                continue
-
-            code_type = block.block_type
-            code = block.block_text
-
-            assistant_msg = "".join(pending_text) + f"```{code_type}\n{code}\n```"
             pending_text = []
-            messages.append({"role": "assistant", "content": assistant_msg})
-            _append_step_log(messages_log, f"assistant {pair_idx}", assistant_msg)
+            pair_idx = 0  # numbering for code/result pairs in logs
 
-            if code_type == "python":
-                code_response = execute_python(code)
-                python_blocks.append(code)
-            elif code_type == "bash":
-                code_response = execute_bash(code)
-            else:
-                user_msg = f"Unknown code type: {code_type}"
-                messages.append({"role": "user", "content": user_msg})
-                _append_step_log(messages_log, "user", user_msg)
-                continue
+            for block in llm_response_blocks:
+                if block.block_type == "text":
+                    if block.block_text and block.block_text.strip():
+                        pending_text.append(block.block_text)
+                    continue
 
-            result_parts = []
-            if code_response.stdout:
-                result_parts.append(f"\n**STDOUT:**\n{code_response.stdout}")
-            if code_response.stderr:
-                result_parts.append(f"**STDERR:**\n{code_response.stderr}")
-            block_result = "Code execution result:\n" + "\n\n".join(result_parts) if result_parts else "Code execution result: (no output)"
+                if block.block_type not in ("python", "bash"):
+                    continue
 
-            messages.append({"role": "user", "content": block_result})
-            _append_step_log(messages_log, f"user {pair_idx}", block_result)
-            pair_idx += 1
+                code_type = block.block_type
+                code = block.block_text
 
-        # If only text blocks existed, surface them once
-        if pending_text and not python_blocks and not any(b.block_type == "bash" for b in llm_response_blocks):
-            text_msg = "".join(pending_text)
-            messages.append({"role": "assistant", "content": text_msg})
-            _append_step_log(messages_log, "assistant", text_msg)
+                assistant_msg = "".join(pending_text) + f"<{code_type}>\n{code}\n</{code_type}>"
+                pending_text = []
+                messages.append({"role": "assistant", "content": assistant_msg})
+                _append_step_log(messages_log, f"assistant {pair_idx}", assistant_msg)
 
-        # Was final_answer or step_status assigned in any python block?
-        vars_assigned = any(check_assigned_variables(b) for b in python_blocks)
-        final_answer = PERSISTENT_GLOBALS.get('final_answer', '')
-        step_status = PERSISTENT_GLOBALS.get('step_status', '')
+                if code_type == "python":
+                    code_response = execute_python(code)
+                elif code_type == "bash":
+                    code_response = execute_bash(code)
+                else:
+                    user_msg = f"Unknown code type: {code_type}"
+                    messages.append({"role": "user", "content": user_msg})
+                    _append_step_log(messages_log, "user", user_msg)
+                    continue
 
-        # True only if exactly one python block exists AND it assigns both step_status and final_answer (order doesn't matter)
-        twoline_oneblock_code = False
-        if len(llm_response_blocks) == 1 and llm_response_blocks[0].block_type == "python" and len(ast.parse(llm_response_blocks[0].block_text).body) == 2:
-            try:
-                tree = ast.parse(python_blocks[0])
-                targets = set()
-                for node in tree.body:
-                    if isinstance(node, ast.Assign):
-                        for t in node.targets:
-                            if isinstance(t, ast.Name):
-                                targets.add(t.id)
-                            elif isinstance(t, (ast.Tuple, ast.List)):
-                                for elt in t.elts:
-                                    if isinstance(elt, ast.Name):
-                                        targets.add(elt.id)
-                if "final_answer" in targets and "step_status" in targets:
-                    twoline_oneblock_code = True
-            except Exception:
-                pass
+                result_parts = []
+                if code_response.stdout:
+                    result_parts.append(f"\n**STDOUT:**\n{code_response.stdout}")
+                if code_response.stderr:
+                    result_parts.append(f"**STDERR:**\n{code_response.stderr}")
+                block_result = "Code execution result:\n" + "\n\n".join(result_parts) if result_parts else "Code execution result: (no output)"
 
-        if vars_assigned and final_answer and step_status and not twoline_oneblock_code:
-            are_you_sure_msg = (
-                'Make sure that the step is completed correctly and you understand the result.\n'
-                'Analyze all the information above, facts and code execution results. You should base you descision on the information above.\n'
-                f'The current step target was: >>>{current_step.step_description}<<<\n'
-                f'The current step output variables (should be set if task is `completed`, `None` or empty containers ([], {{}} etc.) **is not allowed**):{format_step_variables(current_step.output_variables)}\n\n'
+                messages.append({"role": "user", "content": block_result})
+                _append_step_log(messages_log, f"user {pair_idx}", block_result)
+                pair_idx += 1
 
-                'If you are sure you want to finilize step: use **exactly** two lines of code\n'
-                "\n```python\nstep_status = 'completed' OR 'failed'\nfinal_answer = ...result description...\n```\n"
+            if pending_text:
+                text_msg = "".join(pending_text)
+                if text_msg.strip():
+                    messages.append({"role": "assistant", "content": text_msg})
+                    _append_step_log(messages_log, "assistant", text_msg)
 
-                'Do not include other codes blocks. Only one python code block with two assignments.'
-            )
-            messages.append({"role": "user", "content": are_you_sure_msg})
-            _append_step_log(messages_log, "user", are_you_sure_msg)
             continue
 
-        if vars_assigned and final_answer and step_status and twoline_oneblock_code:
+        # Case 3: only final_answer blocks (no python/bash). Validate format and data types.
+        if has_final_blocks:
+            if llm_response and llm_response.strip():
+                messages.append({"role": "assistant", "content": llm_response})
+                _append_step_log(messages_log, "assistant", llm_response)
+
+            final_blocks = [b for b in llm_response_blocks if b.block_type == "final_answer"]
+            if len(final_blocks) != 1:
+                fix_msg = (
+                    "Provide exactly one <final_answer> block that contains python assigning `step_status` ('completed' or 'failed') and `final_answer` (description)."
+                )
+                messages.append({"role": "user", "content": fix_msg})
+                _append_step_log(messages_log, "user", fix_msg)
+                continue
+
+            final_code = final_blocks[0].block_text
+
+            try:
+                parsed = ast.parse(final_code)
+            except Exception:
+                fix_msg = (
+                    "The <final_answer> block must be valid python that sets `step_status` ('completed' or 'failed') and `final_answer` (description). "
+                    "Please resend a <final_answer> block with exactly those assignments."
+                )
+                messages.append({"role": "user", "content": fix_msg})
+                _append_step_log(messages_log, "user", fix_msg)
+                continue
+
+            # Enforce structure: exactly two assignments to step_status and final_answer, nothing else.
+            valid_structure = False
+            if len(parsed.body) == 2 and all(isinstance(stmt, ast.Assign) for stmt in parsed.body):
+                targets = []
+                for stmt in parsed.body:
+                    for t in stmt.targets:
+                        if isinstance(t, (ast.Tuple, ast.List)):
+                            targets.extend([elt.id for elt in t.elts if isinstance(elt, ast.Name)])
+                        elif isinstance(t, ast.Name):
+                            targets.append(t.id)
+                valid_structure = sorted(targets) == ["final_answer", "step_status"]
+
+            if not valid_structure:
+                fix_msg = (
+                    "The <final_answer> block must contain exactly two assignment statements: one to `step_status` and one to `final_answer`, and nothing else."
+                )
+                messages.append({"role": "user", "content": fix_msg})
+                _append_step_log(messages_log, "user", fix_msg)
+                continue
+
+            execute_python(final_code)
+
+            final_answer = PERSISTENT_GLOBALS.get('final_answer', '')
+            step_status = PERSISTENT_GLOBALS.get('step_status', '')
+
+            if step_status not in ('completed', 'failed') or not final_answer:
+                fix_msg = (
+                    "Ensure <final_answer> sets both variables exactly:\n"
+                    "step_status = 'completed' or 'failed'\n"
+                    "final_answer = 'description of the result'"
+                )
+                messages.append({"role": "user", "content": fix_msg})
+                _append_step_log(messages_log, "user", fix_msg)
+                continue
+
             if step_status == 'failed':
                 return final_answer
 
@@ -164,10 +200,12 @@ def run_step(task, current_step, completed_steps, log_dir=None, step_index=0) ->
                                         f'name of the class should be verbatim {dtype_str}, so re-import it if needed\n'
                                         f'examples of different imports: import pandas as pd VS import pandas; import numpy as np VS import numpy; etc\n'
                                         )
-            if not error_msg:
-                return final_answer
-            
-            messages.append({"role": "user", "content": error_msg})
-            _append_step_log(messages_log, "user", error_msg)
+
+            if error_msg:
+                messages.append({"role": "user", "content": error_msg})
+                _append_step_log(messages_log, "user", error_msg)
+                continue
+
+            return final_answer
 
     return "Max iterations reached without a final answer."
