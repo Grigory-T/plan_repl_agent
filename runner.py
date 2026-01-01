@@ -119,6 +119,12 @@ task = """
 
 """
 
+
+task = """
+
+2+2
+"""
+
 reset()
 clear_directories()
 

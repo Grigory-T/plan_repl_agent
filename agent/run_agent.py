@@ -14,8 +14,8 @@ from .log import _init_log_dir, _append_log, _format_plan
 MAX_TOTAL_STEPS = 30
 
 
-def run_agent(task: str) -> str:
-    log_dir = _init_log_dir()
+def run_agent(task: str, log_dir_name: str | None = None) -> str:
+    log_dir = _init_log_dir(log_dir_name)
     plan: Plan = create_plan(task)
     remaining_steps: list[PlanStep] = list(plan.steps)
     completed_steps: list[tuple[PlanStep, str]] = []

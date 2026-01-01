@@ -34,8 +34,8 @@ def main():
         work_dir.mkdir(exist_ok=True)
         os.chdir(work_dir)
         
-        # Run agent
-        result = run_agent(task)
+        # Run agent, pass task_id to align log directory name with work directory
+        result = run_agent(task, log_dir_name=task_id)
         
         # Write success output
         with open(output_path, "w") as f:

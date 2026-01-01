@@ -5,8 +5,10 @@ from pathlib import Path
 from .plan import Plan
 
 
-def _init_log_dir() -> Path:
-    base = Path(__file__).resolve().parent.parent / "logs" / datetime.now().strftime("%Y%m%d_%H%M%S")
+def _init_log_dir(custom_dir_name: str | None = None) -> Path:
+    """Initialize log directory. If custom_dir_name is provided, use it as folder name."""
+    dir_name = custom_dir_name or datetime.now().strftime("%Y%m%d_%H%M%S")
+    base = Path(__file__).resolve().parent.parent / "logs" / dir_name
     base.mkdir(parents=True, exist_ok=True)
     return base
 

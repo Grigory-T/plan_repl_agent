@@ -6,6 +6,7 @@ import sys
 import threading
 import subprocess
 import asyncio
+import datetime
 from pathlib import Path
 from collections import deque
 from fastapi import FastAPI
@@ -240,7 +241,8 @@ class TaskStatus(BaseModel):
 
 @app.post("/run", response_model=TaskResponse)
 async def run_task(request: TaskRequest):
-    task_id = str(uuid.uuid4())
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    task_id = f"{ts}_{uuid.uuid4()}"
     
     with tasks_lock:
         tasks_store[task_id] = {
