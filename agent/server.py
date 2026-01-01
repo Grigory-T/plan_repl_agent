@@ -257,20 +257,32 @@ async def run_task(request: TaskRequest):
         pending_queue.append(task_id)
     print(f"✓ Task {task_id[:8]} queued")
     
-    # Wait for result.md file in work/{task_id}/ directory
+    # Paths for worker outputs
     work_dir = Path("/app/work") / task_id
     result_file = work_dir / "result.md"
     
-    # Poll every 1 second until result.md appears
-    while not result_file.exists():
+    # Poll until the supervisor marks the task finished (completed or failed)
+    status = "pending"
+    while True:
         await asyncio.sleep(1)
-    
-    # Read result and return
-    result_text = result_file.read_text()
-    
+        with tasks_lock:
+            status = tasks_store.get(task_id, {}).get("status", "not_found")
+            error = tasks_store.get(task_id, {}).get("error")
+        if status in ("completed", "failed"):
+            break
+
+    # Try to read result.md; fall back to error or a default message
+    if result_file.exists():
+        try:
+            result_text = result_file.read_text()
+        except Exception as e:
+            result_text = f"result.md could not be read: {e}"
+    else:
+        result_text = error or "no result produced"
+
     return TaskResponse(
         task_id=task_id,
-        status="completed",
+        status=status,
         message=result_text
     )
 
