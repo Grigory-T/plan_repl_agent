@@ -56,8 +56,9 @@ def reset() -> dict:
 
 
 task = """
-
+install more requests
 install more itertools
+
 
 """.strip()
 
